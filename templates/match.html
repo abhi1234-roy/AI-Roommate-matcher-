@@ -1,0 +1,277 @@
+{% extends "base.html" %}
+
+{% block title %}Match - Roommate Matcher{% endblock %}
+
+{% block content %}
+<div class="card" style="text-align: center;">
+    <div class="card-header">Run Roommate Matching Algorithm</div>
+    
+    {% if student_count >= 2 %}
+    <div style="padding: 2rem;">
+        <p style="font-size: 1.2rem; color: var(--text-light); margin-bottom: 2rem;">
+            {{ student_count }} registered students available for matching
+        </p>
+        
+        <div style="background: #fff3cd; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; border-left: 4px solid #ffc107;">
+            <h4 style="color: #856404; margin-bottom: 0.5rem;">📋 Select Matching Algorithm</h4>
+            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                <label style="flex: 1; padding: 1rem; background: white; border: 2px solid #007bff; border-radius: 8px; cursor: pointer;">
+                    <input type="radio" name="matching_mode" value="astar" checked onchange="updateMatchingMode(this.value)" style="margin-right: 0.5rem;">
+                    <strong>A* Search Algorithm</strong> (Optimal batch matching)
+                </label>
+                <label style="flex: 1; padding: 1rem; background: white; border: 2px solid #e0e0e0; border-radius: 8px; cursor: pointer;">
+                    <input type="radio" name="matching_mode" value="pairwise" onchange="updateMatchingMode(this.value)" style="margin-right: 0.5rem;">
+                    <strong>Pairwise Matching</strong> (Compare 2 students)
+                </label>
+            </div>
+            <p id="modeDescription" style="color: #856404; margin: 1rem 0 0 0;">Select 2 or more students for optimal A* matching</p>
+        </div>
+        
+        <form method="POST" action="{{ url_for('match') }}" id="matchForm" style="text-align: left;">
+            <div style="background: #f8f9fa; padding: 2rem; border-radius: 8px; margin-bottom: 2rem;">
+                <h4 style="color: var(--primary); margin-bottom: 1.5rem;">Select Students:</h4>
+                <div style="display: grid; gap: 1rem;">
+                    {% for student in students %}
+                    <label style="display: flex; align-items: center; padding: 1rem; background: white; border: 2px solid #e0e0e0; border-radius: 8px; cursor: pointer; transition: all 0.2s;" 
+                           onmouseover="this.style.borderColor='var(--primary)'; this.style.backgroundColor='#f0f9ff';"
+                           onmouseout="if(!this.querySelector('input').checked) { this.style.borderColor='#e0e0e0'; this.style.backgroundColor='white'; }">
+                        <input type="checkbox" name="selected_students" value="{{ student.id }}" 
+                               style="width: 20px; height: 20px; margin-right: 1rem; cursor: pointer;"
+                               onchange="updateSelection(this)">
+                        <div style="flex: 1;">
+                            <strong style="font-size: 1.1rem; color: var(--text);">{{ student.name }}</strong>
+                            <div style="color: var(--text-light); font-size: 0.9rem; margin-top: 0.25rem;">
+                                {{ student.age }}y • {{ student.gender }} • {{ student.sleep_schedule }} • {{ student.personality }}
+                            </div>
+                        </div>
+                    </label>
+                    {% endfor %}
+                </div>
+                <p id="selectionInfo" style="margin-top: 1rem; padding: 0.75rem; background: #e3f2fd; border-radius: 4px; color: #1976d2; text-align: center;">
+                    Please select at least 2 students for A* matching
+                </p>
+            </div>
+            
+            <div style="background: #f0f9ff; padding: 2rem; border-radius: 8px; margin-bottom: 2rem; text-align: left;">
+                <h4 style="color: var(--info); margin-bottom: 1rem;">A* Search Algorithm Process:</h4>
+                <ol id="algorithmSteps" style="margin-left: 1.5rem; line-height: 2;">
+                    <li>Convert student preferences to numeric vectors</li>
+                    <li>Calculate all pairwise compatibility scores (similarity matrix)</li>
+                    <li><strong>A* Search:</strong> Explore matching states using priority queue</li>
+                    <li><strong>Heuristic:</strong> Optimistic estimate of remaining compatibility</li>
+                    <li><strong>Goal:</strong> Find optimal matching with maximum total compatibility</li>
+                    <li>Return best matching arrangement with detailed reasons</li>
+                </ol>
+            </div>
+            
+            <div style="text-align: center;">
+                <button type="submit" id="matchButton" class="btn btn-success" style="font-size: 1.1rem; padding: 1rem 2rem;" disabled>
+                    🚀 Run A* Search Algorithm
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <script>
+    let currentMode = 'astar';
+    
+    function updateMatchingMode(mode) {
+        currentMode = mode;
+        const description = document.getElementById('modeDescription');
+        const steps = document.getElementById('algorithmSteps');
+        const button = document.getElementById('matchButton');
+        
+        if (mode === 'astar') {
+            description.textContent = 'Select 2 or more students for optimal A* matching';
+            button.innerHTML = '🚀 Run A* Search Algorithm';
+            steps.innerHTML = `
+                <li>Convert student preferences to numeric vectors</li>
+                <li>Calculate all pairwise compatibility scores (similarity matrix)</li>
+                <li><strong>A* Search:</strong> Explore matching states using priority queue</li>
+                <li><strong>Heuristic:</strong> Optimistic estimate of remaining compatibility</li>
+                <li><strong>Goal:</strong> Find optimal matching with maximum total compatibility</li>
+                <li>Return best matching arrangement with detailed reasons</li>
+            `;
+        } else {
+            description.textContent = 'Choose exactly 2 students to find their compatibility score';
+            button.innerHTML = '📊 Calculate Pairwise Compatibility';
+            steps.innerHTML = `
+                <li>Convert student preferences to numeric vectors</li>
+                <li>Calculate weighted Euclidean distance between the two students</li>
+                <li>Apply hobby overlap bonus using Jaccard similarity</li>
+                <li>Generate compatibility score (0-100%) and detailed reasons</li>
+            `;
+        }
+        
+        // Update radio button styling
+        document.querySelectorAll('input[name="matching_mode"]').forEach(radio => {
+            if (radio.checked) {
+                radio.parentElement.style.borderColor = '#007bff';
+                radio.parentElement.style.backgroundColor = '#e7f3ff';
+            } else {
+                radio.parentElement.style.borderColor = '#e0e0e0';
+                radio.parentElement.style.backgroundColor = 'white';
+            }
+        });
+        
+        // Reset selection
+        const checkboxes = document.querySelectorAll('input[name="selected_students"]');
+        checkboxes.forEach(cb => {
+            cb.checked = false;
+            cb.disabled = false;
+            cb.parentElement.style.opacity = '1';
+            cb.parentElement.style.cursor = 'pointer';
+            cb.parentElement.style.borderColor = '#e0e0e0';
+            cb.parentElement.style.backgroundColor = 'white';
+        });
+        
+        updateSelection(null);
+    }
+    
+    function updateSelection(checkbox) {
+        const checkboxes = document.querySelectorAll('input[name="selected_students"]');
+        const checked = Array.from(checkboxes).filter(cb => cb.checked);
+        const info = document.getElementById('selectionInfo');
+        const button = document.getElementById('matchButton');
+        
+        if (currentMode === 'pairwise') {
+            // Pairwise mode: exactly 2 students
+            checkboxes.forEach(cb => {
+                if (checked.length >= 2 && !cb.checked) {
+                    cb.disabled = true;
+                    cb.parentElement.style.opacity = '0.5';
+                    cb.parentElement.style.cursor = 'not-allowed';
+                } else {
+                    cb.disabled = false;
+                    cb.parentElement.style.opacity = '1';
+                    cb.parentElement.style.cursor = 'pointer';
+                }
+                
+                if (cb.checked) {
+                    cb.parentElement.style.borderColor = 'var(--success)';
+                    cb.parentElement.style.backgroundColor = '#d4edda';
+                } else if (!cb.disabled) {
+                    cb.parentElement.style.borderColor = '#e0e0e0';
+                    cb.parentElement.style.backgroundColor = 'white';
+                }
+            });
+            
+            if (checked.length === 0) {
+                info.textContent = 'Please select exactly 2 students';
+                info.style.background = '#e3f2fd';
+                info.style.color = '#1976d2';
+                button.disabled = true;
+            } else if (checked.length === 1) {
+                info.textContent = 'Select 1 more student (1 of 2 selected)';
+                info.style.background = '#fff3cd';
+                info.style.color = '#856404';
+                button.disabled = true;
+            } else if (checked.length === 2) {
+                const names = checked.map(cb => cb.parentElement.querySelector('strong').textContent).join(' and ');
+                info.textContent = '✓ Ready to match: ' + names;
+                info.style.background = '#d4edda';
+                info.style.color = '#155724';
+                button.disabled = false;
+            }
+        } else {
+            // A* mode: 2 or more students
+            checkboxes.forEach(cb => {
+                if (cb.checked) {
+                    cb.parentElement.style.borderColor = 'var(--success)';
+                    cb.parentElement.style.backgroundColor = '#d4edda';
+                } else {
+                    cb.parentElement.style.borderColor = '#e0e0e0';
+                    cb.parentElement.style.backgroundColor = 'white';
+                }
+            });
+            
+            if (checked.length === 0) {
+                info.textContent = 'Please select at least 2 students for A* matching';
+                info.style.background = '#e3f2fd';
+                info.style.color = '#1976d2';
+                button.disabled = true;
+            } else if (checked.length === 1) {
+                info.textContent = 'Select at least 1 more student (1 selected)';
+                info.style.background = '#fff3cd';
+                info.style.color = '#856404';
+                button.disabled = true;
+            } else {
+                info.textContent = `✓ Ready for A* matching: ${checked.length} students selected`;
+                info.style.background = '#d4edda';
+                info.style.color = '#155724';
+                button.disabled = false;
+            }
+        }
+    }
+    
+    // Form validation
+    document.getElementById('matchForm').addEventListener('submit', function(e) {
+        const checked = document.querySelectorAll('input[name="selected_students"]:checked');
+        const mode = document.querySelector('input[name="matching_mode"]:checked').value;
+        
+        if (mode === 'pairwise' && checked.length !== 2) {
+            e.preventDefault();
+            alert('Please select exactly 2 students for pairwise matching!');
+            return false;
+        }
+        
+        if (mode === 'astar' && checked.length < 2) {
+            e.preventDefault();
+            alert('Please select at least 2 students for A* matching!');
+            return false;
+        }
+        
+        if (mode === 'astar') {
+            return confirm(`Run A* Search algorithm on ${checked.length} students?`);
+        } else {
+            return confirm('Calculate compatibility between these 2 students?');
+        }
+    });
+    </script>
+    {% else %}
+    <div style="padding: 3rem;">
+        <p style="font-size: 1.2rem; color: var(--text-light); margin-bottom: 1rem;">
+            Not enough students registered
+        </p>
+        <p style="color: var(--text-light); margin-bottom: 2rem;">
+            You need at least 2 students to perform matching. Currently registered: {{ student_count }}
+        </p>
+        <a href="{{ url_for('register') }}" class="btn btn-primary">Register More Students</a>
+    </div>
+    {% endif %}
+</div>
+
+<div class="card">
+    <div class="card-header">About the Algorithm</div>
+    <div class="grid grid-2">
+        <div>
+            <h4 style="color: var(--primary); margin-bottom: 0.75rem;">A* Search Algorithm</h4>
+            <p style="color: var(--text-light);">
+                Optimal pathfinding algorithm that guarantees best matching:
+            </p>
+            <ul style="margin: 1rem 0 0 1.5rem; color: var(--text);">
+                <li><strong>State Space:</strong> All possible matching arrangements</li>
+                <li><strong>Cost Function (g):</strong> Negative of total compatibility</li>
+                <li><strong>Heuristic (h):</strong> Optimistic remaining score estimate</li>
+                <li><strong>Priority Queue:</strong> Explores best states first (f = g + h)</li>
+                <li><strong>Admissible:</strong> Guarantees optimal solution</li>
+                <li><strong>Complete:</strong> Always finds solution if one exists</li>
+            </ul>
+        </div>
+        <div>
+            <h4 style="color: var(--primary); margin-bottom: 0.75rem;">Feature Weights</h4>
+            <p style="color: var(--text-light);">
+                Weighted Euclidean distance for compatibility calculation:
+            </p>
+            <ul style="margin: 1rem 0 0 1.5rem; color: var(--text);">
+                <li>Sleep Time: 25%</li>
+                <li>Study Time: 20%</li>
+                <li>Cleanliness: 20%</li>
+                <li>Noise Tolerance: 15%</li>
+                <li>Personality: 10%</li>
+                <li>Hobbies (Jaccard): 10%</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

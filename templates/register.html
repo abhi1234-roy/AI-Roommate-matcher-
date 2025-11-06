@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Register - Roommate Matcher{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">Student Registration</div>
+    
+    <form method="POST" action="{{ url_for('register') }}">
+        <h3 style="margin-bottom: 1rem; color: var(--dark);">Basic Information</h3>
+        
+        <div class="grid grid-2">
+            <div class="form-group">
+                <label class="form-label">Full Name *</label>
+                <input type="text" name="name" class="form-control" required placeholder="Enter your full name">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Email *</label>
+                <input type="email" name="email" class="form-control" required placeholder="your.email@example.com">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Age *</label>
+                <input type="number" name="age" class="form-control" required min="16" max="100" placeholder="18">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Gender *</label>
+                <select name="gender" class="form-control" required>
+                    <option value="">Select gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+        </div>
+        
+        <hr style="margin: 2rem 0; border: none; border-top: 2px solid var(--border);">
+        
+        <h3 style="margin-bottom: 1rem; color: var(--dark);">Lifestyle Preferences</h3>
+        
+        <div class="grid grid-2">
+            <div class="form-group">
+                <label class="form-label">Sleep Schedule *</label>
+                <select name="sleep_time" class="form-control" required>
+                    <option value="">Select your sleep time</option>
+                    <option value="0">Early Bird (Before 10 PM)</option>
+                    <option value="1">Moderate (10 PM - 12 AM)</option>
+                    <option value="2">Night Owl (After 12 AM)</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Preferred Study Time *</label>
+                <select name="study_time" class="form-control" required>
+                    <option value="">Select study time</option>
+                    <option value="0">Morning (6 AM - 12 PM)</option>
+                    <option value="1">Afternoon (12 PM - 5 PM)</option>
+                    <option value="2">Evening (5 PM - 9 PM)</option>
+                    <option value="3">Night (9 PM - 2 AM)</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Cleanliness Level *</label>
+                <select name="cleanliness" class="form-control" required>
+                    <option value="">Rate your cleanliness</option>
+                    <option value="1">1 - Very Messy</option>
+                    <option value="2">2 - Somewhat Messy</option>
+                    <option value="3">3 - Moderate</option>
+                    <option value="4">4 - Quite Clean</option>
+                    <option value="5">5 - Very Clean</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Noise Tolerance *</label>
+                <select name="noise_tolerance" class="form-control" required>
+                    <option value="">Select noise tolerance</option>
+                    <option value="1">1 - Very Quiet</option>
+                    <option value="2">2 - Prefer Quiet</option>
+                    <option value="3">3 - Moderate</option>
+                    <option value="4">4 - Can Handle Noise</option>
+                    <option value="5">5 - Love Noise</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Personality Type *</label>
+                <select name="personality" class="form-control" required>
+                    <option value="">Select personality</option>
+                    <option value="0">Introvert</option>
+                    <option value="1">Ambivert</option>
+                    <option value="2">Extrovert</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Hobbies (comma-separated) *</label>
+                <input type="text" name="hobbies" class="form-control" required 
+                       placeholder="e.g., reading, gaming, sports, music">
+                <small style="color: var(--text-light); font-size: 0.875rem;">
+                    Enter multiple hobbies separated by commas
+                </small>
+            </div>
+        </div>
+        
+        <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+            <button type="submit" class="btn btn-primary">Register Student</button>
+            <a href="{{ url_for('index') }}" class="btn" style="background: var(--border); color: var(--text);">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<div class="card" style="background: #f0f9ff;">
+    <h4 style="color: var(--info); margin-bottom: 1rem;">Tips for Better Matches</h4>
+    <ul style="margin-left: 1.5rem; color: var(--text);">
+        <li>Be honest about your preferences - it leads to better compatibility!</li>
+        <li>List specific hobbies to find roommates with shared interests</li>
+        <li>Consider your daily routine when selecting sleep and study times</li>
+        <li>Think about what environment helps you be most productive</li>
+    </ul>
+</div>
+{% endblock %}

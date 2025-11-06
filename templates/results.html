@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Results - Roommate Matcher{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">Roommate Matching Results</div>
+    
+    <div class="grid grid-2" style="margin-bottom: 2rem;">
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1.5rem; border-radius: 8px; text-align: center;">
+            <div style="font-size: 2.5rem; font-weight: bold;">{{ stats.total_pairs }}</div>
+            <div style="font-size: 1rem; opacity: 0.9;">Total Matched Pairs</div>
+        </div>
+        <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 1.5rem; border-radius: 8px; text-align: center;">
+            <div style="font-size: 2.5rem; font-weight: bold;">{{ stats.average_score }}%</div>
+            <div style="font-size: 1rem; opacity: 0.9;">Average Compatibility</div>
+        </div>
+    </div>
+    
+    <div style="display: flex; gap: 1rem; margin-bottom: 2rem;">
+        <div style="flex: 1; background: #ecfdf5; padding: 1rem; border-radius: 8px; text-align: center;">
+            <div style="color: var(--success); font-weight: bold;">Highest Match</div>
+            <div style="font-size: 1.5rem; color: var(--dark);">{{ stats.max_score }}%</div>
+        </div>
+        <div style="flex: 1; background: #fef3c7; padding: 1rem; border-radius: 8px; text-align: center;">
+            <div style="color: var(--warning); font-weight: bold;">Lowest Match</div>
+            <div style="font-size: 1.5rem; color: var(--dark);">{{ stats.min_score }}%</div>
+        </div>
+    </div>
+</div>
+
+{% if matches %}
+<div class="card">
+    <h3 style="margin-bottom: 1.5rem; color: var(--dark);">Matched Pairs</h3>
+    
+    {% for match in matches %}
+    <div style="border: 2px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; 
+                {% if match.compatibility_score >= 80 %}border-color: var(--success);
+                {% elif match.compatibility_score >= 60 %}border-color: var(--info);
+                {% else %}border-color: var(--warning);{% endif %}">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <div style="flex: 1;">
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+                    <div style="background: var(--primary); color: white; width: 40px; height: 40px; border-radius: 50%; 
+                                display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                        {{ match.student1.name[0] }}
+                    </div>
+                    <div>
+                        <h4 style="margin: 0; color: var(--dark);">{{ match.student1.name }}</h4>
+                        <p style="margin: 0; color: var(--text-light); font-size: 0.875rem;">{{ match.student1.email }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="text-align: center; padding: 0 2rem;">
+                <div style="font-size: 2rem; font-weight: bold; 
+                           {% if match.compatibility_score >= 80 %}color: var(--success);
+                           {% elif match.compatibility_score >= 60 %}color: var(--info);
+                           {% else %}color: var(--warning);{% endif %}">
+                    {{ match.compatibility_score }}%
+                </div>
+                <div style="font-size: 0.875rem; color: var(--text-light);">Compatibility</div>
+            </div>
+            
+            <div style="flex: 1; text-align: right;">
+                <div style="display: flex; align-items: center; gap: 1rem; justify-content: flex-end; margin-bottom: 0.5rem;">
+                    <div style="text-align: right;">
+                        <h4 style="margin: 0; color: var(--dark);">{{ match.student2.name }}</h4>
+                        <p style="margin: 0; color: var(--text-light); font-size: 0.875rem;">{{ match.student2.email }}</p>
+                    </div>
+                    <div style="background: var(--success); color: white; width: 40px; height: 40px; border-radius: 50%; 
+                                display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                        {{ match.student2.name[0] }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; margin-top: 1rem;">
+            <strong style="color: var(--dark); display: block; margin-bottom: 0.5rem;">Match Reasons:</strong>
+            <ul style="margin: 0; padding-left: 1.5rem; color: var(--text);">
+                {% for reason in match.reasons.split(', ') %}
+                <li>{{ reason }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        
+        <div class="grid grid-2" style="gap: 1rem; margin-top: 1rem; font-size: 0.875rem;">
+            <div style="background: white; padding: 0.75rem; border-radius: 6px;">
+                <strong style="color: var(--text-light);">{{ match.student1.name }}:</strong><br>
+                Sleep: {{ ['Early', 'Medium', 'Late'][match.student1.sleep_time] }} | 
+                Study: {{ ['Morning', 'Afternoon', 'Evening', 'Night'][match.student1.study_time] }} | 
+                Clean: {{ match.student1.cleanliness }}/5
+            </div>
+            <div style="background: white; padding: 0.75rem; border-radius: 6px;">
+                <strong style="color: var(--text-light);">{{ match.student2.name }}:</strong><br>
+                Sleep: {{ ['Early', 'Medium', 'Late'][match.student2.sleep_time] }} | 
+                Study: {{ ['Morning', 'Afternoon', 'Evening', 'Night'][match.student2.study_time] }} | 
+                Clean: {{ match.student2.cleanliness }}/5
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div style="text-align: center; margin-top: 2rem;">
+    <a href="{{ url_for('match') }}" class="btn btn-primary">Match Different Students</a>
+    <a href="{{ url_for('students') }}" class="btn" style="background: var(--border); color: var(--text);">
+        View All Students
+    </a>
+</div>
+{% endblock %}
